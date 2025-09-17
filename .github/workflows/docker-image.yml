@@ -164,7 +164,7 @@ jobs:
           repository: jagadishkl/3-Tier-GitOps-CD
           ref: main
           token: ${{ secrets.CD_REPO_TOKEN }}
-          path: 3-Tier-GitOps-CD
+          path: cd
 
       - name: Bump images in manifests (safe)
         working-directory: cd
