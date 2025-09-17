@@ -167,7 +167,38 @@ jobs:
           token: ${{ secrets.CD_REPO_TOKEN }}
           path: cd
 
+      - name: Bump images in manifests (safe)
+        working-directory: cd
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+        run: |
+          curl -sL https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o yq && sudo install yq /usr/local/bin/yq
 
+          # -- Safety cleanup: remove any accidental .spec.template from Service docs
+          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/backend.yaml
+          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/frontend.yaml
+
+          # -- Update ONLY Deployment images (backend)
+          yq -i '
+            (. | select(.kind=="Deployment")
+               | .spec.template.spec.containers[]
+               | select(.name=="backend")
+               | .image)
+            = "adijaiswal/backend:" + strenv(IMAGE_TAG)
+          ' k8s-prod/backend.yaml
+
+          # -- Update ONLY Deployment images (frontend)
+          yq -i '
+            (. | select(.kind=="Deployment")
+               | .spec.template.spec.containers[]
+               | select(.name=="frontend")
+               | .image)
+            = "adijaiswal/frontend:" + strenv(IMAGE_TAG)
+          ' k8s-prod/frontend.yaml
+
+      - name: Commit & push to CD repo
+        working-directory: cd
+        run: |
           git config user.name "ci-bot"
           git config user.email "ci-bot@users.noreply.github.com"
           git add -A
