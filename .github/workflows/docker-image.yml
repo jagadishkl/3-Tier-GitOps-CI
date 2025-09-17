@@ -174,8 +174,8 @@ jobs:
           curl -sL https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 -o yq && sudo install yq /usr/local/bin/yq
 
           # -- Safety cleanup: remove any accidental .spec.template from Service docs
-          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/backend.yaml
-          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' k8s-prod/frontend.yaml
+          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' 3-Tier-GitOps-CD/k8s-prod/backend.yaml
+          yq -i '(. | select(.kind=="Service")) |= del(.spec.template)' 3-Tier-GitOps-CD/k8s-prod/frontend.yaml
 
           # -- Update ONLY Deployment images (backend)
           yq -i '
@@ -184,7 +184,7 @@ jobs:
                | select(.name=="backend")
                | .image)
             = "kljagadish/backend:" + strenv(IMAGE_TAG)
-          ' k8s-prod/backend.yaml
+          ' 3-Tier-GitOps-CD/k8s-prod/backend.yaml
 
           # -- Update ONLY Deployment images (frontend)
           yq -i '
@@ -193,7 +193,7 @@ jobs:
                | select(.name=="frontend")
                | .image)
             = "kljagadish/frontend:" + strenv(IMAGE_TAG)
-          ' k8s-prod/frontend.yaml
+          ' 3-Tier-GitOps-CD/k8s-prod/frontend.yaml
 
       - name: Commit & push to CD repo
         working-directory: cd
